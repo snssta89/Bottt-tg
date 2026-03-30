@@ -1,38 +1,53 @@
+import logging
+import asyncio
 import os
-import telebot
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters.command import Command
+from aiogram.types import Message
+from config import TELEGRAM_TOKEN, ADMIN_ID
 
-# Load environment variables
-TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-VPN_SERVICE = os.getenv('VPN_SERVICE')
-AI_MODEL = os.getenv('AI_MODEL')
-CRYPTO_API_KEY = os.getenv('CRYPTO_API_KEY')
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+bot = Bot(token=TELEGRAM_TOKEN)
+dp = Dispatcher()
 
-# Initialize the bot
-bot = telebot.TeleBot(TOKEN)
+@dp.message(Command("start"))
+async def start_command(message: Message):
+    keyboard = types.ReplyKeyboardMarkup(keyboard=[[types.KeyboardButton(text="🔐 VPN Subscription")], [types.KeyboardButton(text="🎰 Lottery")], [types.KeyboardButton(text="👤 Profile")], [types.KeyboardButton(text="💰 Referral")]], resize_keyboard=True)
+    await message.answer(f"👋 Welcome, {message.from_user.first_name}!
+\nThis is a Monetization Bot.
+\nChoose an option:", reply_markup=keyboard)
 
-# VPN functionality
-def register_vpn_user(user_id):
-    # Logic to register user for VPN service
-    pass
+@dp.message(Command("vpn"))
+async def vpn_menu(message: Message):
+    await message.answer("🔐 VPN Service - Coming Soon!")
 
-# AI interaction
-def query_ai(input_text):
-    # Logic to send query to AI model and return response
-    pass
+@dp.message(Command("lottery"))
+async def lottery_menu(message: Message):
+    await message.answer("🎰 Lottery - Coming Soon!")
 
-# Lottery functionality
-def enter_lottery(user_id):
-    # Logic to enter user into lottery
-    pass
+@dp.message(Command("profile"))
+async def profile_command(message: Message):
+    await message.answer(f"👤 Profile of {message.from_user.first_name}")
 
-# Crypto payment functionality
-def process_crypto_payment(user_id, amount):
-    # Logic to handle crypto payment
-    pass
+@dp.message(Command("admin"))
+async def admin_panel(message: Message):
+    if message.from_user.id != ADMIN_ID:
+        await message.answer("❌ Access Denied!")
+        return
+    await message.answer("🛠️ Admin Panel - Active")
 
-@bot.message_handler(commands=['start', 'help'])
-def send_welcome(message):
-    bot.reply_to(message, "Welcome to the Telegram Bot! How can I assist you today?")
+@dp.message(Command("help"))
+async def help_command(message: Message):
+    await message.answer("Available Commands:\n/start\n/vpn\n/lottery\n/profile\n/help")
+
+@dp.message()
+async def handle_text(message: Message):
+    await message.answer("Use /help for commands")
+
+async def main():
+    logger.info("Bot starting...")
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    bot.polling()
+    asyncio.run(main())
